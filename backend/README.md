@@ -6,7 +6,7 @@ Permite registrar y visualizar transacciones de un Tenpista mediante un backend 
 ## 🚀 Tecnologías utilizadas
 Backend
 Java 21
-Spring Boot 4.0.0
+Spring Boot 3.4.0
 Spring Web
 Spring Data JPA
 Spring Validation
@@ -45,15 +45,42 @@ Swagger: Documentación automática.
 ## 🗂️ Estructura de carpetas
 Backend
 /backend
- ├── src/main/java/com/tenpo/transactions
- │     ├── controller
- │     ├── dto
- │     ├── service
- │     │     └── impl
- │     ├── repository
- │     ├── entity
- │     ├── exception
- │     └── mapper
+src/main/java/com/tenpo/transactions
+ ├── domain
+ │    └── model
+ │         └── Transaction.java          
+ │    
+ │
+ ├── application
+ │		 ├── port
+ │     │    └── TransactionRepositoryPort.java
+ │     └── service
+ │          	├── TransactionService.java
+ │          	└── TransactionServiceImpl.java
+ │
+ ├── infrastructure
+ │   ├── adapters
+ │   │	├─api
+ │   │	│  └─ controller
+ │   │	│		  ├── dto
+ │   │	│     │    ├── TransactionRequest.java
+ │   │	│     │    └── TransactionResponse.java
+ │   │	│		  └── TransactionController.java
+ │   │	└── mapper
+ │   │     	  └── TransactionMapper.java
+ │   ├── config
+ │   │	 └─ OpenApiConfig.java
+ │   │     
+ │   ├── jpa
+ │   │	   ├── TransactionJpaEntity.java
+ │   │     ├── TransactionJpaRepository.java
+ │   │     └── TransactionRepositoryJpaAdapter.java
+ │   ├── mapper
+ │   │ 	└── TransactionMapper.java
+ │   │
+ │   └── exception
+ │			├── ApiError.java
+ │			└── GlobalExceptionHandler.java
  ├── src/main/resources
  │     └── application.yml
  ├── Dockerfile
