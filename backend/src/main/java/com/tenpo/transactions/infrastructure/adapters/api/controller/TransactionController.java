@@ -16,7 +16,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -44,13 +48,18 @@ public class TransactionController {
                     )
             }
     )
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TransactionResponse create(@Valid @RequestBody TransactionRequest request) {
-        var transaction = mapper.toDomain(request);
-        var created = service.create(transaction);
-        return mapper.toResponse(created);
-    }
+        @PostMapping
+        public org.springframework.http.ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request) {
+                var transaction = mapper.toDomain(request);
+                var created = service.create(transaction);
+
+                java.net.URI location = org.springframework.web.util.UriComponentsBuilder
+                        .fromPath("/transactions/{id}")
+                        .buildAndExpand(created.id())
+                        .toUri();
+
+                return org.springframework.http.ResponseEntity.created(location).body(mapper.toResponse(created));
+        }
 
     @Operation(
             summary = "Listar transacciones",

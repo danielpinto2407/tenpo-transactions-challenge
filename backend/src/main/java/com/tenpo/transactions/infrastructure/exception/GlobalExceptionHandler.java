@@ -3,6 +3,8 @@ package com.tenpo.transactions.infrastructure.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,9 +12,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Validaciones fallidas del DTO (RequestBody).
@@ -22,12 +27,14 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
-        String errorMessage = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .findFirst()
+        var fieldErrors = ex.getBindingResult().getFieldErrors();
+        String errorMessage = fieldErrors.stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("Datos inválidos");
+                .collect(Collectors.joining("; "));
+
+        if (errorMessage.isBlank()) {
+            errorMessage = "Datos inválidos";
+        }
 
         ApiError error = new ApiError(
                 LocalDateTime.now(),
@@ -35,6 +42,8 @@ public class GlobalExceptionHandler {
                 errorMessage,
                 request.getRequestURI()
         );
+
+        log.debug("Validation failed: {}", errorMessage);
 
         return ResponseEntity.badRequest().body(error);
     }

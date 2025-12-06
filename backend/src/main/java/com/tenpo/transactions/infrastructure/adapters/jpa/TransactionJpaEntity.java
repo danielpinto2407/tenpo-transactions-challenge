@@ -22,9 +22,15 @@ public class TransactionJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @jakarta.persistence.Column(nullable = false)
     private Integer amount;
+
+    @jakarta.persistence.Column(length = 255)
     private String business;
+
+    @jakarta.persistence.Column(length = 255)
     private String tenpistaName;
+
     private LocalDateTime transactionDate;
 }
 

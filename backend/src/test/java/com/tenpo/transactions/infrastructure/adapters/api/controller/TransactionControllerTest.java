@@ -49,10 +49,11 @@ class TransactionControllerTest {
         when(mapper.toDomain(request)).thenReturn(domainTransaction);
         when(service.create(domainTransaction)).thenReturn(createdTransaction);
         when(mapper.toResponse(createdTransaction)).thenReturn(response);
-
-        TransactionResponse result = controller.create(request);
+        org.springframework.http.ResponseEntity<TransactionResponse> result = controller.create(request);
 
         assertNotNull(result);
+        assertEquals(201, result.getStatusCodeValue());
+        assertSame(response, result.getBody());
         verify(mapper).toDomain(request);
         verify(service).create(domainTransaction);
         verify(mapper).toResponse(createdTransaction);

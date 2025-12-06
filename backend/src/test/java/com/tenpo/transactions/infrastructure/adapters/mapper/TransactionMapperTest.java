@@ -26,7 +26,7 @@ class TransactionMapperTest {
 
         jpaEntity = TransactionJpaEntity.builder()
                 .id(1L)
-                .amount(100) // Integer
+                .amount(100) 
                 .business("Test Business")
                 .tenpistaName("John Doe")
                 .transactionDate(date)
@@ -34,7 +34,7 @@ class TransactionMapperTest {
 
         transaction = new Transaction(
                 1L,
-                100, // Integer
+                100, 
                 "Test Business",
                 "John Doe",
                 date
