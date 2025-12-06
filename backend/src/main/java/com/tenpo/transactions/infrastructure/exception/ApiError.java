@@ -1,0 +1,10 @@
+package com.tenpo.transactions.infrastructure.exception;
+
+import java.time.LocalDateTime;
+
+public record ApiError(
+        LocalDateTime timestamp,
+        int status,
+        String message,
+        String path
+) {}
