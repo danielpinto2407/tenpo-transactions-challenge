@@ -45,6 +45,18 @@ Una vez levantado el backend estará disponible en `http://localhost:8080`.
 Swagger / OpenAPI UI (documentación):
 - `http://localhost:8080/swagger-ui/index.html` (o `http://localhost:8080/swagger-ui.html` según entorno)
 
+Si quieres servir frontend + backend + DB con Docker, el `docker-compose.yml` ya incluye un servicio `frontend` que construye la app y la sirve con Nginx. El frontend será accesible en `http://localhost:3000`.
+
+Notas sobre la configuración del frontend en Docker:
+- El build del frontend recibe la variable de entorno build-time `VITE_API_BASE_URL` (establecida en `docker-compose.yml` a `http://backend:8080`) para que la build estática conozca la URL interna del backend.
+- Para desarrollo local con el servidor de Vite, crea un archivo `.env` en `frontend/` con:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+Esto hará que el frontend en modo `dev` apunte al backend local.
+
 ## Ejecutar backend localmente (sin Docker)
 
 Requisitos: JDK 21 y Maven.
