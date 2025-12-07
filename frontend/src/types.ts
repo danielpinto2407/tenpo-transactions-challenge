@@ -14,3 +14,11 @@ export interface TransactionRequest {
 }
 
 export interface TransactionResponse extends Transaction {}
+
+export interface PaginatedTransactionResponse {
+  content: TransactionResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { TransactionRequest, TransactionResponse } from "../types";
+import type { TransactionRequest, TransactionResponse, PaginatedTransactionResponse } from "../types";
 
 const BASE = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:8080";
 
@@ -15,5 +15,10 @@ export const getTransactions = async (): Promise<TransactionResponse[]> => {
 
 export const createTransaction = async (transaction: TransactionRequest): Promise<TransactionResponse> => {
   const res = await api.post<TransactionResponse>("/transactions", transaction);
+  return res.data;
+};
+
+export const getTransactionsPage = async (page = 0, size = 10): Promise<PaginatedTransactionResponse> => {
+  const res = await api.get<PaginatedTransactionResponse>(`/transactions?page=${page}&size=${size}`);
   return res.data;
 };

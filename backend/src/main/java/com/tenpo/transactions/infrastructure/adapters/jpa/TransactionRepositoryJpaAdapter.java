@@ -3,6 +3,8 @@ package com.tenpo.transactions.infrastructure.adapters.jpa;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.tenpo.transactions.application.port.TransactionRepositoryPort;
 import com.tenpo.transactions.domain.model.Transaction;
@@ -29,6 +31,12 @@ public class TransactionRepositoryJpaAdapter implements TransactionRepositoryPor
                 .stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Page<Transaction> findAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toDomain);
     }
 }
 

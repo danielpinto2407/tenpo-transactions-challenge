@@ -3,6 +3,7 @@ package com.tenpo.transactions.infrastructure.adapters.api.controller;
 import com.tenpo.transactions.application.service.TransactionService;
 import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.TransactionRequest;
 import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.TransactionResponse;
+import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.PaginatedTransactionResponse;
 import com.tenpo.transactions.infrastructure.adapters.api.mapper.TransactionDtoMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -79,5 +80,27 @@ public class TransactionController {
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    @GetMapping(params = {"page", "size"})
+    public org.springframework.http.ResponseEntity<PaginatedTransactionResponse> listPaged(
+            @org.springframework.web.bind.annotation.RequestParam int page,
+            @org.springframework.web.bind.annotation.RequestParam int size) {
+
+        org.springframework.data.domain.Page<com.tenpo.transactions.domain.model.Transaction> result = service.list(
+                org.springframework.data.domain.PageRequest.of(page, size)
+        );
+
+        var content = result.getContent().stream().map(mapper::toResponse).toList();
+
+        var response = new com.tenpo.transactions.infrastructure.adapters.api.controller.dto.PaginatedTransactionResponse(
+                content,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
+
+        return org.springframework.http.ResponseEntity.ok(response);
     }
 }
