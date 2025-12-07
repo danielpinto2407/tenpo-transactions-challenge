@@ -1,132 +1,184 @@
 # Tenpo Transactions Challenge
 
-Proyecto para el challenge FullStack-Externo: backend en Java (Spring Boot) y frontend en React.
+Repositorio con la solución al challenge FullStack-Externo: backend en Java (Spring Boot) y frontend en React (Vite).
 
-Este README resume cómo ejecutar el backend localmente y con Docker, endpoints disponibles, validaciones, y notas importantes para la entrega.
+Este README describe la arquitectura, tecnologías, pasos para ejecutar la aplicación (local y con Docker), cómo ejecutar las pruebas y verificaciones útiles para quien revisará la prueba.
 
 **Tecnologías principales**
 - Backend: Java 21, Spring Boot 3.x, Spring Data JPA, Hibernate
-- Base de datos: PostgreSQL (vía Docker)
+- Base de datos: PostgreSQL (contenedor Docker)
 - API docs: Springdoc OpenAPI (Swagger)
-- Frontend: React + Vite (carpeta `frontend`)
-- Build & run: Maven wrapper (`./mvnw`) y `docker-compose`
+- Frontend: React + TypeScript + Vite
+- Styling: Tailwind CSS
+- Tests frontend: Vitest + Testing Library
+- Tests backend: JUnit (Maven)
 
-**Estado actual**
-- Endpoints implementados:
-  - `POST /transactions` - crea una transacción (devuelve `201 Created`, `Location` header y el body con la transacción creada).
-  - `GET /transactions` - lista todas las transacciones.
-- Validaciones y reglas de negocio:
-  - `amount` no puede ser negativo (validación en DTO + validación de dominio en `Transaction`).
-  - `transactionDate` no puede ser posterior a la fecha/hora actual (validación en el dominio).
-- Manejo de errores centralizado en `GlobalExceptionHandler` que devuelve `ApiError` con `timestamp`, `status`, `message` y `path`.
-- Tests: la suite de tests unitarios del backend pasa (`./mvnw test`) — actualmente 41 tests.
+---
 
-## Ejecutar con Docker (recomendado para evaluación)
+## Requisitos previos
+- Docker & Docker Compose (recomendado para evaluación)
+- JDK 21 + Maven (solo si quieres ejecutar backend fuera de Docker)
+- Node.js + npm (solo si quieres ejecutar frontend fuera de Docker)
 
-El repositorio tiene un `docker-compose.yml` que arranca Postgres y el backend.
+---
 
-Variables usadas en `docker-compose.yml` (por defecto):
-- Postgres user: `tenpo`
-- Postgres password: `tenpo123`
-- Postgres database: `tenpo`
+## Quickstart (recomendado) — ejecutar todo con Docker Compose
 
-Comandos:
+Desde la raíz del repositorio ejecuta:
 
-```bash
-# Levantar servicios (desde la raíz del repo)
-docker-compose up --build
-
-# Parar y remover contenedores
-docker-compose down
+Windows (cmd.exe):
+```cmd
+docker compose up --build
 ```
 
-Una vez levantado el backend estará disponible en `http://localhost:8080`.
+PowerShell note: si copias comandos con `&` o caracteres especiales usa comillas.
 
-Swagger / OpenAPI UI (documentación):
-- `http://localhost:8080/swagger-ui/index.html` (o `http://localhost:8080/swagger-ui.html` según entorno)
-
-Si quieres servir frontend + backend + DB con Docker, el `docker-compose.yml` ya incluye un servicio `frontend` que construye la app y la sirve con Nginx. El frontend será accesible en `http://localhost:3000`.
-
-Notas sobre la configuración del frontend en Docker:
-- El build del frontend recibe la variable de entorno build-time `VITE_API_BASE_URL` (establecida en `docker-compose.yml` a `http://backend:8080`) para que la build estática conozca la URL interna del backend.
-- Para desarrollo local con el servidor de Vite, crea un archivo `.env` en `frontend/` con:
-
+Linux / macOS:
 ```bash
-VITE_API_BASE_URL=http://localhost:8080
+docker compose up --build
 ```
 
-Esto hará que el frontend en modo `dev` apunte al backend local.
+Esto iniciará los siguientes servicios:
+- `db` (Postgres) — credenciales por defecto en `docker-compose.yml`.
+- `backend` (Spring Boot) — expuesto en `http://localhost:8080`.
+- `frontend` (builder + nginx) — expuesto en `http://localhost:3000`.
 
-## Ejecutar backend localmente (sin Docker)
+Parar y remover contenedores:
+```bash
+docker compose down
+```
 
-Requisitos: JDK 21 y Maven.
+Notas:
+- El servicio `frontend` en `docker-compose.yml` usa una `VITE_API_BASE_URL` apuntando a `http://backend:8080` para que la build estática sepa la URL interna del backend en el entorno Docker.
 
+---
+
+## Ejecutar localmente (sin Docker)
+
+Estas instrucciones sirven si prefieres ejecutar servicios por separado.
+
+Backend (JDK 21 + Maven):
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-Comandos de tests:
+Frontend (Node.js + npm):
+```bash
+cd frontend
+npm install
+# para desarrollo
+npm run dev
+# para construir producción localmente
+npm run build
+```
 
+Si ejecutas el frontend en modo `dev`, setea `VITE_API_BASE_URL` en `frontend/.env`:
+```
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+---
+
+## Tests
+
+Backend (Maven / JUnit):
 ```bash
 cd backend
 ./mvnw test
 ```
 
-## Ejecutar frontend localmente
-
-Requisitos: Node.js + npm/yarn.
-
+Frontend (Vitest):
 ```bash
 cd frontend
 npm install
-npm run dev
+npx vitest run
+# para cobertura
+npx vitest run --coverage
 ```
 
-El frontend usa Vite (`npm run dev`) y estará disponible en `http://localhost:5173` por defecto.
+Se añadieron pruebas unitarias a `frontend/src/components/__tests__` y se configuró `src/setupTests.ts`.
+
+---
 
 ## Endpoints principales
 
 - POST /transactions
+  - Crea una transacción.
+  - Request example:
 
-  - Descripción: Crea una transacción.
-  - Request body (ejemplo JSON):
-
-    ```json
-    {
-      "amount": 12000,
-      "business": "Supermercado ABC",
-      "tenpistaName": "Juan Perez",
-      "transactionDate": "2024-12-01T14:30:00"
-    }
-    ```
+```json
+{
+  "amount": 12000,
+  "business": "Supermercado ABC",
+  "tenpistaName": "Juan Perez",
+  "transactionDate": "2024-12-01T14:30:00"
+}
+```
 
   - Respuesta: `201 Created` con header `Location: /transactions/{id}` y el body JSON de la transacción creada.
 
 - GET /transactions
+  - Devuelve todas las transacciones (ordenadas por creación, más recientes primero).
 
-  - Descripción: Devuelve todas las transacciones.
-  - Respuesta: `200 OK` con un array de transacciones.
+- GET /transactions?page={page}&size={size}
+  - Devuelve una respuesta paginada con la estructura:
 
-## Notas técnicas y decisiones
+```json
+{
+  "content": [ /* array de transacciones */ ],
+  "page": 0,
+  "size": 5,
+  "totalElements": 42,
+  "totalPages": 9
+}
+```
 
-- Arquitectura: se aplicó un patrón estilo hexagonal/port-adapter (existe `application.port`, adaptadores JPA y API). Esto facilita mantenibilidad y testing.
-- Validaciones: se realizan en DTOs y en el dominio (`Transaction` es un `record` que valida invariantes). Si prefieres que campos como `business` y `tenpistaName` sean obligatorios, se pueden forzar con `@NotBlank` en el DTO.
-- Persistencia: se usan anotaciones JPA básicas y `hibernate.ddl-auto=update` para simplificar el desarrollo. Para producción se recomienda usar Flyway o Liquibase para migraciones gestionadas.
+---
 
-## Recomendaciones para la entrega
+## Ordenación de transacciones (nota importante)
 
-- Incluye este README en el repositorio junto con el código.
-- Indica en la descripción del PR/README los puntos que realizaste (endpoints, validaciones, Docker, tests verdes).
-- Opcionales pero recomendables: agregar Flyway y tests de integración con Testcontainers.
+Por diseño, las transacciones ahora se devuelven ordenadas por el orden de creación (más recientes primero). Esto se implementó ordenando por la columna `id` en la base de datos (`ORDER BY id DESC`) tanto en la consulta paginada como en el listado completo.
 
-## Cambios aplicados durante la revisión
+Motivo: la entidad actual no tenía un campo `createdAt`; usar `id` (auto-incremental) es una forma segura de representar el orden de creación sin cambios de esquema. Si prefieres un campo explícito `createdAt`, puedo añadirlo con `@PrePersist` y una migración SQL, y luego ordenar por `createdAt`.
 
-- Mejoré `GlobalExceptionHandler` para concatenar todos los errores de validación y añadir logging.
-- Añadí constraints JPA (`@Column(nullable = false)` para `amount` y `length` en strings) en `TransactionJpaEntity`.
-- `POST /transactions` ahora retorna `ResponseEntity` con `201 Created` y `Location` header. Actualicé tests unitarios correspondientes.
+---
 
-Si quieres que añada Flyway o tests de integración antes de subir, lo hago a continuación. ¿Prefieres que genere el archivo `README.md` del `backend/` también o sólo el README raíz?
+## Verificar manualmente (ejemplos)
 
-***
-Archivo generado automáticamente por el asistente en base al estado actual del proyecto.
+Obtener página 0, size 5 (PowerShell):
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/transactions?page=0&size=5' -Headers @{Accept='application/json'} | ConvertTo-Json -Depth 5
+```
+
+Obtener todos (curl on Linux/macOS):
+```bash
+curl -sS "http://localhost:8080/transactions" | jq .
+```
+
+Crear una transacción (curl):
+```bash
+curl -sS -X POST "http://localhost:8080/transactions" -H "Content-Type: application/json" -d '{"amount":100,"business":"Tienda","tenpistaName":"Ana","transactionDate":"2025-12-01T10:00:00"}' -i
+```
+
+---
+
+## Buenas prácticas y consideraciones de entrega
+
+- Para producción se recomienda:
+  - Añadir migraciones gestionadas (Flyway / Liquibase).
+  - Auditar y versionar la API (OpenAPI + versioning).
+  - Añadir tests de integración (Testcontainers) para el flujo completo con Postgres.
+
+- Para la evaluación, incluye en la descripción del PR/entrega:
+  - Resumen de endpoints y reglas de negocio implementadas.
+  - Cómo ejecutar con Docker (comandos que usarías localmente).
+  - Cualquier decisión técnica relevante (por ejemplo: ordenación por `id` vs `createdAt`).
+
+---
+
+Si quieres que:
+- haga el cambio para introducir `createdAt` en la entidad y la migración SQL,
+- o que cree un pequeño `backend/README.md` con detalle técnico adicional,
+
+dímelo y lo preparo.

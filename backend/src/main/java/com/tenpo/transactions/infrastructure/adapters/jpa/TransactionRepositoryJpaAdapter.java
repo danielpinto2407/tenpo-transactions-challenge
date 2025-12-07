@@ -27,10 +27,10 @@ public class TransactionRepositoryJpaAdapter implements TransactionRepositoryPor
 
     @Override
     public List<Transaction> findAll() {
-        return repository.findAll()
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
+        return repository.findAll(org.springframework.data.domain.Sort.by("id").descending())
+            .stream()
+            .map(mapper::toDomain)
+            .toList();
     }
 
     @Override

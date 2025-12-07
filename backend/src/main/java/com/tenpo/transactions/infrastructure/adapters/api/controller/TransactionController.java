@@ -1,6 +1,7 @@
 package com.tenpo.transactions.infrastructure.adapters.api.controller;
 
 import com.tenpo.transactions.application.service.TransactionService;
+import com.tenpo.transactions.domain.model.Transaction;
 import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.TransactionRequest;
 import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.TransactionResponse;
 import com.tenpo.transactions.infrastructure.adapters.api.controller.dto.PaginatedTransactionResponse;
@@ -13,13 +14,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -49,18 +49,18 @@ public class TransactionController {
                     )
             }
     )
-        @PostMapping
-        public org.springframework.http.ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request) {
-                var transaction = mapper.toDomain(request);
-                var created = service.create(transaction);
+    @PostMapping
+    public ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request) {
+        Transaction transaction = mapper.toDomain(request);
+        Transaction created = service.create(transaction);
 
-                java.net.URI location = org.springframework.web.util.UriComponentsBuilder
-                        .fromPath("/transactions/{id}")
-                        .buildAndExpand(created.id())
-                        .toUri();
+        URI location = org.springframework.web.util.UriComponentsBuilder
+                .fromPath("/transactions/{id}")
+                .buildAndExpand(created.id())
+                .toUri();
 
-                return org.springframework.http.ResponseEntity.created(location).body(mapper.toResponse(created));
-        }
+        return ResponseEntity.created(location).body(mapper.toResponse(created));
+    }
 
     @Operation(
             summary = "Listar transacciones",
@@ -83,17 +83,19 @@ public class TransactionController {
     }
 
     @GetMapping(params = {"page", "size"})
-    public org.springframework.http.ResponseEntity<PaginatedTransactionResponse> listPaged(
-            @org.springframework.web.bind.annotation.RequestParam int page,
-            @org.springframework.web.bind.annotation.RequestParam int size) {
+    public ResponseEntity<PaginatedTransactionResponse> listPaged(
+            @RequestParam int page,
+            @RequestParam int size) {
 
-        org.springframework.data.domain.Page<com.tenpo.transactions.domain.model.Transaction> result = service.list(
-                org.springframework.data.domain.PageRequest.of(page, size)
-        );
+        Page<Transaction> result = service.list(PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("id").descending()));
 
-        var content = result.getContent().stream().map(mapper::toResponse).toList();
+        List<TransactionResponse> content = result.getContent()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
 
-        var response = new com.tenpo.transactions.infrastructure.adapters.api.controller.dto.PaginatedTransactionResponse(
+        PaginatedTransactionResponse response = new PaginatedTransactionResponse(
                 content,
                 result.getNumber(),
                 result.getSize(),
@@ -101,6 +103,6 @@ public class TransactionController {
                 result.getTotalPages()
         );
 
-        return org.springframework.http.ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 }
