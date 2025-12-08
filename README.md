@@ -545,16 +545,37 @@ tenpo-challenge/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                                    # React Components
-│   │   │   ├── features/                                  # Feature-specific
-│   │   │   └── shared/                                    # Reusable
-│   │   ├── services/                                      # API calls
-│   │   ├── types/                                         # TypeScript types
-│   │   ├── utils/                                         # Helper functions
-│   │   └── App.tsx
+│   │   ├── api/
+│   │   │   └── transactionApi.ts                          # API client (Axios)
+│   │   ├── assets/
+│   │   │   └── react.svg
+│   │   ├── components/
+│   │   │   ├── __tests__/                                 # Component tests
+│   │   │   │   ├── TransactionForm.test.tsx
+│   │   │   │   ├── TransactionList.test.tsx
+│   │   │   │   └── TransactionsPage.test.tsx
+│   │   │   ├── TransactionForm.tsx                        # Formulario de creación
+│   │   │   ├── TransactionList.tsx                        # Lista de transacciones
+│   │   │   └── TransactionsPage.tsx                       # Página principal
+│   │   ├── pages/
+│   │   │   └── Dashboard.tsx                              # Dashboard/Home
+│   │   ├── types.ts                                       # TypeScript interfaces
+│   │   ├── App.css
+│   │   ├── App.tsx                                        # Componente raíz
+│   │   ├── index.css                                      # Estilos globales
+│   │   ├── main.tsx                                       # Entry point
+│   │   └── setupTests.ts                                  # Configuración de tests
 │   ├── public/
+│   ├── .gitignore
+│   ├── .dockerignore
 │   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
 │   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
 │   └── vite.config.ts
 │
 ├── docker-compose.yml
