@@ -18,68 +18,104 @@ Aplicación FullStack para la gestión de transacciones de Tenpistas, desarrolla
 ## 🏗 Arquitectura
 
 ### Backend (Spring Boot)
-El backend implementa una **arquitectura en capas** inspirada en principios hexagonales:
+El backend implementa **arquitectura hexagonal** (Ports & Adapters), separando claramente el dominio de las implementaciones técnicas:
 
 ```
-┌─────────────────────────────────────┐
-│         API Layer (Controllers)      │
-│  - REST endpoints                    │
-│  - Validación de entrada             │
-│  - Manejo de respuestas HTTP         │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│      Service Layer (Business Logic)  │
-│  - Lógica de negocio                │
-│  - Validaciones de dominio          │
-│  - Orquestación de operaciones      │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│    Repository Layer (Data Access)    │
-│  - Spring Data JPA                   │
-│  - Abstracción de persistencia      │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│         PostgreSQL Database          │
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│         Infrastructure Layer (Adapters)         │
+│  ┌──────────────────┐  ┌───────────────────┐    │
+│  │   API Adapter    │  │  JPA Adapter      │    │
+│  │  (Controllers)   │  │  (Repositories)   │    │
+│  │  - REST endpoints│  │  - DB operations  │    │
+│  │  - DTOs          │  │  - JPA entities   │    │
+│  └────────┬─────────┘  └─────────┬─────────┘    │
+└───────────┼─────────────────────┼───────────────┘
+            │                     │
+            │  Implements Port    │  Implements Port
+            │                     │
+┌───────────▼─────────────────────▼───────────────┐
+│         Application Layer (Ports & Services)    │
+│  ┌───────────────────────────────────────────┐  │
+│  │  TransactionRepositoryPort (Interface)    │  │
+│  │  - Abstracción de persistencia            │  │
+│  └───────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────┐  │
+│  │  TransactionService (Business Logic)      │  │
+│  │  - Casos de uso                           │  │
+│  │  - Reglas de negocio                      │  │
+│  │  - Orquestación                           │  │
+│  └───────────────────────────────────────────┘  │
+└───────────────────────┬─────────────────────────┘
+                        │
+                        │  Uses
+                        │
+┌───────────────────────▼─────────────────────────┐
+│              Domain Layer (Core)                │
+│  ┌───────────────────────────────────────────┐  │
+│  │  Transaction (Entity)                     │  │
+│  │  - Modelo de dominio puro                 │  │
+│  │  - Sin dependencias externas              │  │
+│  └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
 ```
 
 **Componentes principales:**
-- **Controllers**: Manejo de requests HTTP y validación de entrada
-- **Services**: Lógica de negocio y reglas de dominio
-- **Repositories**: Acceso a datos mediante Spring Data JPA
-- **DTOs**: Separación entre representación API y entidades de dominio
-- **Global Exception Handler**: Manejo centralizado de errores con respuestas consistentes
+
+**🔵 Domain Layer (Núcleo)**
+- `Transaction`: Entidad de dominio pura, sin anotaciones de infraestructura
+- Representa el modelo de negocio central
+- Sin dependencias hacia capas externas
+
+**🟢 Application Layer (Lógica de Aplicación)**
+- `TransactionRepositoryPort`: Puerto (interface) que define contrato de persistencia
+- `TransactionService` / `TransactionServiceImpl`: Casos de uso y lógica de negocio
+- Independiente de frameworks y detalles de implementación
+
+**🟡 Infrastructure Layer (Adaptadores)**
+- **API Adapter**:
+  - `TransactionController`: Adaptador REST (entrada)
+  - `TransactionRequest/Response`: DTOs para comunicación HTTP
+- **JPA Adapter**:
+  - `TransactionJpaEntity`: Entidad JPA (adaptación del modelo de dominio)
+  - `TransactionJpaRepository`: Repositorio Spring Data
+  - `TransactionRepositoryJpaAdapter`: Implementación del puerto de persistencia
+- **Mappers**: Transformación entre capas (Domain ↔ JPA, Domain ↔ DTO)
+- **Exception Handling**: Gestión centralizada de errores
+
+**Ventajas de esta arquitectura:**
+- ✅ **Independencia del dominio**: El núcleo no conoce Spring, JPA o HTTP
+- ✅ **Testabilidad**: Fácil mockear puertos en tests unitarios
+- ✅ **Flexibilidad**: Cambiar adaptadores sin afectar el dominio (ej: MongoDB en lugar de PostgreSQL)
+- ✅ **Mantenibilidad**: Separación clara de responsabilidades
+- ✅ **Principio de Inversión de Dependencias**: El dominio define contratos, infraestructura los implementa
 
 ### Frontend (React + TypeScript)
 Arquitectura basada en **componentes funcionales** con hooks:
 
 ```
 ┌─────────────────────────────────────┐
-│           Pages/Views                │
-│  - TransactionsPage                  │
+│           Pages/Views               │
+│  - TransactionsPage                 │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
-│      Feature Components              │
-│  - TransactionList                   │
-│  - TransactionForm                   │
+│      Feature Components             │
+│  - TransactionList                  │
+│  - TransactionForm                  │
 │  - Filtros y búsqueda               │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
-│       Shared Components              │
+│       Shared Components             │
 │  - Buttons, Cards, Modals           │
-│  - Loading states                    │
+│  - Loading states                   │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
-│        Services/API Layer            │
-│  - Axios client                      │
-│  - API calls                         │
-└──────────────────────────────────────┘
+│        Services/API Layer           │
+│  - Axios client                     │
+│  - API calls                        │
+└─────────────────────────────────────┘
 ```
 
 ---
@@ -144,12 +180,12 @@ docker compose up --build
 
 ### 3. Acceder a la aplicación
 
-| Servicio | URL | Descripción |
-|----------|-----|-------------|
-| Frontend | http://localhost:3000 | Interfaz de usuario |
-| Backend API | http://localhost:8080 | REST API |
-| Swagger UI | http://localhost:8080/swagger-ui.html | Documentación interactiva |
-| PostgreSQL | localhost:5432 | Base de datos (usuario: `tenpo`, password: `tenpo123`) |
+| Servicio     | URL                                    | Descripción                                            |
+|--------------|----------------------------------------|--------------------------------------------------------|
+| Frontend     | http://localhost:3000                  | Interfaz de usuario                                    |
+| Backend API  | http://localhost:8080                  | REST API                                               |
+| Swagger UI   | http://localhost:8080/swagger-ui.html  | Documentación interactiva                              |
+| PostgreSQL   | localhost:5432                         | Base de datos (usuario: `tenpo`, password: `tenpo123`) |
 
 ### 4. Detener los servicios
 ```bash
@@ -234,9 +270,9 @@ cd backend
 ```
 
 **Tipos de tests implementados:**
-- ✅ Tests unitarios de servicios
+- ✅ Tests unitarios de servicios (mockeo de puertos)
 - ✅ Tests de validación de DTOs
-- ✅ Tests de repositorio con `@DataJpaTest`
+- ✅ Tests de adaptadores con `@DataJpaTest`
 - ✅ Tests de integración de controllers con `@SpringBootTest`
 
 ### Frontend (Vitest)
@@ -383,27 +419,35 @@ Todos los errores devuelven una estructura consistente:
 
 ### Backend
 
-#### 1. Arquitectura en Capas
-- **Separación de responsabilidades**: Controllers, Services, Repositories
-- **DTOs**: Desacoplamiento entre API y dominio
-- **Validación en múltiples capas**: Frontend → Controller (@Valid) → Service (lógica de negocio)
+#### 1. Arquitectura Hexagonal (Ports & Adapters)
+- **Separación por capas conceptuales**: Domain (núcleo), Application (lógica), Infrastructure (adaptadores)
+- **Puertos e interfaces**: `TransactionRepositoryPort` define contrato sin implementación
+- **Inversión de dependencias**: El dominio no depende de frameworks externos
+- **Adaptadores intercambiables**: JPA, REST, o cualquier otro sin afectar el núcleo
+- **Testabilidad superior**: Mock de puertos para tests unitarios aislados
 
-#### 2. Auditoría Automática
+#### 2. Separación de Modelos
+- **Domain Model**: `Transaction` - Entidad de dominio pura
+- **JPA Entity**: `TransactionJpaEntity` - Modelo de persistencia con anotaciones JPA
+- **DTOs**: `TransactionRequest/Response` - Contratos de API
+- **Mappers**: Transformación explícita entre modelos de diferentes capas
+
+#### 3. Auditoría Automática
 - **JPA Auditing**: `@CreatedDate` y `@LastModifiedDate` para tracking automático
 - **Timestamps en UTC**: `timestamptz` para evitar problemas de zonas horarias
 - **Campos inmutables**: `createdAt` solo se setea en creación
 
-#### 3. Migraciones con Flyway
+#### 4. Migraciones con Flyway
 - **Versionado**: Migraciones numeradas secuencialmente (`V1__`, `V2__`, etc.)
 - **Idempotencia**: Scripts seguros para re-ejecución
 - **Control por ambiente**: Variable `SPRING_FLYWAY_ENABLED` en Docker Compose
 
-#### 4. Manejo de Errores Centralizado
+#### 5. Manejo de Errores Centralizado
 - **GlobalExceptionHandler**: Un único punto para mapear excepciones a respuestas HTTP
 - **Respuestas consistentes**: Misma estructura para todos los errores
 - **Logging**: Trazabilidad de errores con stack traces en logs
 
-#### 5. Paginación Flexible
+#### 6. Paginación Flexible
 - **Dual approach**: Endpoint sin paginación para simplicidad, con paginación para escalabilidad
 - **Defaults sensatos**: Tamaño de página por defecto de 10
 - **Metadatos completos**: totalElements, totalPages para implementar UI pagination
@@ -455,30 +499,58 @@ Todos los errores devuelven una estructura consistente:
 tenpo-challenge/
 ├── backend/
 │   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/tenpo/challenge/
-│   │   │   │   ├── controller/        # REST Controllers
-│   │   │   │   ├── service/           # Business Logic
-│   │   │   │   ├── repository/        # Data Access
-│   │   │   │   ├── model/             # Domain Entities
-│   │   │   │   ├── dto/               # Data Transfer Objects
-│   │   │   │   ├── exception/         # Custom Exceptions
-│   │   │   │   └── config/            # Spring Configuration
-│   │   │   └── resources/
-│   │   │       ├── db/migration/      # Flyway migrations
-│   │   │       └── application.properties
-│   │   └── test/                      # Unit & Integration Tests
+│   │   ├── main/java/com/tenpo/transactions/
+│   │   │   ├── domain/
+│   │   │   │   └── model/
+│   │   │   │       └── Transaction.java              # Entidad de dominio pura
+│   │   │   │
+│   │   │   ├── application/
+│   │   │   │   ├── port/
+│   │   │   │   │   └── TransactionRepositoryPort.java # Puerto (interface)
+│   │   │   │   └── service/
+│   │   │   │       ├── TransactionService.java
+│   │   │   │       └── TransactionServiceImpl.java    # Lógica de negocio
+│   │   │   │
+│   │   │   └── infrastructure/
+│   │   │       ├── adapters/
+│   │   │       │   └── api/
+│   │   │       │       └── controller/
+│   │   │       │           ├── dto/
+│   │   │       │           │   ├── TransactionRequest.java
+│   │   │       │           │   └── TransactionResponse.java
+│   │   │       │           └── TransactionController.java  # Adaptador REST
+│   │   │       │
+│   │   │       ├── jpa/
+│   │   │       │   ├── TransactionJpaEntity.java          # Entidad JPA
+│   │   │       │   ├── TransactionJpaRepository.java
+│   │   │       │   └── TransactionRepositoryJpaAdapter.java # Adaptador persistencia
+│   │   │       │
+│   │   │       ├── mapper/
+│   │   │       │   └── TransactionMapper.java             # Mapeo entre capas
+│   │   │       │
+│   │   │       ├── config/
+│   │   │       │   └── OpenApiConfig.java
+│   │   │       │
+│   │   │       └── exception/
+│   │   │           ├── ApiError.java
+│   │   │           └── GlobalExceptionHandler.java
+│   │   │
+│   │   └── resources/
+│   │       ├── db/migration/                              # Flyway migrations
+│   │       └── application.properties
+│   │
+│   ├── test/                                              # Unit & Integration Tests
 │   ├── Dockerfile
 │   └── pom.xml
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/                # React Components
-│   │   │   ├── features/              # Feature-specific
-│   │   │   └── shared/                # Reusable
-│   │   ├── services/                  # API calls
-│   │   ├── types/                     # TypeScript types
-│   │   ├── utils/                     # Helper functions
+│   │   ├── components/                                    # React Components
+│   │   │   ├── features/                                  # Feature-specific
+│   │   │   └── shared/                                    # Reusable
+│   │   ├── services/                                      # API calls
+│   │   ├── types/                                         # TypeScript types
+│   │   ├── utils/                                         # Helper functions
 │   │   └── App.tsx
 │   ├── public/
 │   ├── Dockerfile
@@ -545,6 +617,7 @@ docker compose exec db psql -U tenpo -d tenpo -c "\dt"
 - [ ] Logging estructurado con ELK stack
 - [ ] Internacionalización (i18n) en frontend
 - [ ] Tests E2E con Playwright/Cypress
+- [ ] Implementar más adaptadores (GraphQL, gRPC)
 
 ---
 
