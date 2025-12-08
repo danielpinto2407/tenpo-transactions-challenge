@@ -9,14 +9,14 @@ class TransactionTest {
     @Test
     void testTransactionWithValidAmount() {
         LocalDateTime pastDate = LocalDateTime.now().minusDays(1);
-        Transaction transaction = new Transaction(1L, 100, "Business", "Tenpista", pastDate);
+        Transaction transaction = new Transaction(1L, 100, "Business", "Tenpista", pastDate, null, null);
         assertEquals(100, transaction.amount());
     }
 
     @Test
     void testTransactionWithZeroAmount() {
         LocalDateTime pastDate = LocalDateTime.now().minusDays(1);
-        Transaction transaction = new Transaction(1L, 0, "Business", "Tenpista", pastDate);
+        Transaction transaction = new Transaction(1L, 0, "Business", "Tenpista", pastDate, null, null);
         assertEquals(0, transaction.amount());
     }
 
@@ -24,7 +24,7 @@ class TransactionTest {
     void testTransactionWithNegativeAmountThrowsException() {
         LocalDateTime pastDate = LocalDateTime.now().minusDays(1);
         assertThrows(IllegalArgumentException.class, () ->
-            new Transaction(1L, -100, "Business", "Tenpista", pastDate)
+            new Transaction(1L, -100, "Business", "Tenpista", pastDate, null, null)
         );
     }
 
@@ -32,14 +32,14 @@ class TransactionTest {
     void testTransactionWithFutureDateThrowsException() {
         LocalDateTime futureDate = LocalDateTime.now().plusDays(1);
         assertThrows(IllegalArgumentException.class, () ->
-            new Transaction(1L, 100, "Business", "Tenpista", futureDate)
+            new Transaction(1L, 100, "Business", "Tenpista", futureDate, null, null)
         );
     }
 
    @Test
     void testTransactionWithCurrentDateTimeIsValid() {
         LocalDateTime now = LocalDateTime.now();
-        Transaction transaction = new Transaction(1L, 100, "Business", "Tenpista", now);
+        Transaction transaction = new Transaction(1L, 100, "Business", "Tenpista", now, null, null);
         assertEquals(now, transaction.transactionDate());
     }
 }

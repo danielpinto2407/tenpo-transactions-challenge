@@ -14,7 +14,7 @@ class TransactionResponseTest {
         String tenpistaName = "Alice";
         LocalDateTime transactionDate = LocalDateTime.now();
 
-        TransactionResponse response = new TransactionResponse(id, amount, business, tenpistaName, transactionDate);
+        TransactionResponse response = new TransactionResponse(id, amount, business, tenpistaName, transactionDate, transactionDate, transactionDate);
 
         assertEquals(id, response.id());
         assertEquals(amount, response.amount());
@@ -31,8 +31,8 @@ class TransactionResponseTest {
         String tenpistaName = "Bob";
         LocalDateTime transactionDate = LocalDateTime.now();
 
-        TransactionResponse response1 = new TransactionResponse(id, amount, business, tenpistaName, transactionDate);
-        TransactionResponse response2 = new TransactionResponse(id, amount, business, tenpistaName, transactionDate);
+        TransactionResponse response1 = new TransactionResponse(id, amount, business, tenpistaName, transactionDate, transactionDate, transactionDate);
+        TransactionResponse response2 = new TransactionResponse(id, amount, business, tenpistaName, transactionDate, transactionDate, transactionDate);
 
         assertEquals(response1, response2);
         assertEquals(response1.hashCode(), response2.hashCode());
@@ -40,7 +40,7 @@ class TransactionResponseTest {
 
     @Test
     void testTransactionResponseToString() {
-        TransactionResponse response = new TransactionResponse(3L, 200, "Bakery", "Carol", LocalDateTime.of(2024, 1, 1, 12, 0));
+        TransactionResponse response = new TransactionResponse(3L, 200, "Bakery", "Carol", LocalDateTime.of(2024, 1, 1, 12, 0), LocalDateTime.of(2024, 1, 1, 12, 0), LocalDateTime.of(2024, 1, 1, 12, 0));
         String toString = response.toString();
         assertTrue(toString.contains("3"));
         assertTrue(toString.contains("200"));

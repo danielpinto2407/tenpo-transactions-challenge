@@ -3,11 +3,17 @@ package com.tenpo.transactions.infrastructure.adapters.jpa;
 import com.tenpo.transactions.application.port.TransactionRepositoryPort;
 import com.tenpo.transactions.domain.model.Transaction;
 import com.tenpo.transactions.infrastructure.adapters.mapper.TransactionMapper;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+
+import org.mockito.ArgumentMatchers;
+
+import org.springframework.data.domain.Sort;
+
 import java.util.Arrays;
 import java.util.List;
+
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,7 +56,9 @@ class TransactionRepositoryJpaAdapterTest {
         Transaction domain1 = mock(Transaction.class);
         Transaction domain2 = mock(Transaction.class);
 
-        when(repository.findAll()).thenReturn(Arrays.asList(entity1, entity2));
+        when(repository.findAll(any(Sort.class)))
+                .thenReturn(Arrays.asList(entity1, entity2));
+
         when(mapper.toDomain(entity1)).thenReturn(domain1);
         when(mapper.toDomain(entity2)).thenReturn(domain2);
 
@@ -59,7 +67,8 @@ class TransactionRepositoryJpaAdapterTest {
         assertEquals(2, result.size());
         assertTrue(result.contains(domain1));
         assertTrue(result.contains(domain2));
-        verify(repository).findAll();
+
+        verify(repository).findAll(any(Sort.class));
         verify(mapper).toDomain(entity1);
         verify(mapper).toDomain(entity2);
     }

@@ -7,7 +7,9 @@ public record Transaction(
         Integer amount,
         String business,
         String tenpistaName,
-        LocalDateTime transactionDate
+        LocalDateTime transactionDate,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
     public Transaction {
         if (amount < 0) {

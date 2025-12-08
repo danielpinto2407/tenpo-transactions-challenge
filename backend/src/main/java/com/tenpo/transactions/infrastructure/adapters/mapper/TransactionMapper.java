@@ -14,7 +14,9 @@ public class TransactionMapper {
                 e.getAmount(),
                 e.getBusiness(),
                 e.getTenpistaName(),
-                e.getTransactionDate()
+                e.getTransactionDate(),
+                e.getCreatedAt(),
+                e.getUpdatedAt()
         );
     }
 
@@ -25,6 +27,8 @@ public class TransactionMapper {
                 .business(t.business())
                 .tenpistaName(t.tenpistaName())
                 .transactionDate(t.transactionDate())
+                .createdAt(t.createdAt())
+                .updatedAt(t.updatedAt())
                 .build();
     }
 }

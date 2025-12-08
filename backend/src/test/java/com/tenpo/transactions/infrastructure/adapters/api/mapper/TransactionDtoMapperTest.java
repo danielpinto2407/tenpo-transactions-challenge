@@ -49,7 +49,9 @@ class TransactionDtoMapperTest {
                 50,
                 "Store B",
                 "Jane Doe",
-                date
+            date,
+            null,
+            null
         );
 
         TransactionResponse result = mapper.toResponse(transaction);
@@ -90,7 +92,9 @@ class TransactionDtoMapperTest {
                 175,
                 "Store D",
                 "Alice Johnson",
-                date
+            date,
+            null,
+            null
         );
 
         TransactionResponse result = mapper.toResponse(transaction);

@@ -7,6 +7,8 @@ public record TransactionResponse(
         Integer amount,
         String business,
         String tenpistaName,
-        LocalDateTime transactionDate
+        LocalDateTime transactionDate,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {}
 

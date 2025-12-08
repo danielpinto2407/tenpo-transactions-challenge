@@ -29,7 +29,9 @@ class TransactionServiceImplTest {
                 100,                       // amount
                 "Test description",
                 "DEBIT",                   // type
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null,
+                null
         );
     }
 

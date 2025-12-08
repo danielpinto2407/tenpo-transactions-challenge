@@ -15,7 +15,9 @@ public class TransactionDtoMapper {
                 request.amount(),
                 request.business(),
                 request.tenpistaName(),
-                request.transactionDate()
+                request.transactionDate(),
+                null,
+                null
         );
     }
 
@@ -25,7 +27,9 @@ public class TransactionDtoMapper {
                 domain.amount(),
                 domain.business(),
                 domain.tenpistaName(),
-                domain.transactionDate()
+                domain.transactionDate(),
+                domain.createdAt(),
+                domain.updatedAt()
         );
     }
 }

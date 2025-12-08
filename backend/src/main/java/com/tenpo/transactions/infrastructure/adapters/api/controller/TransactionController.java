@@ -88,7 +88,7 @@ public class TransactionController {
             @RequestParam int size) {
 
         Page<Transaction> result = service.list(PageRequest.of(page, size,
-                org.springframework.data.domain.Sort.by("id").descending()));
+                org.springframework.data.domain.Sort.by("createdAt").descending()));
 
         List<TransactionResponse> content = result.getContent()
                 .stream()

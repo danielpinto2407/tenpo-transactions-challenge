@@ -2,9 +2,10 @@ package com.tenpo.transactions.infrastructure.adapters.jpa;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 
 import com.tenpo.transactions.application.port.TransactionRepositoryPort;
 import com.tenpo.transactions.domain.model.Transaction;
@@ -27,10 +28,10 @@ public class TransactionRepositoryJpaAdapter implements TransactionRepositoryPor
 
     @Override
     public List<Transaction> findAll() {
-        return repository.findAll(org.springframework.data.domain.Sort.by("id").descending())
-            .stream()
-            .map(mapper::toDomain)
-            .toList();
+        return repository.findAll(Sort.by("createdAt").descending())
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
@@ -39,4 +40,3 @@ public class TransactionRepositoryJpaAdapter implements TransactionRepositoryPor
                 .map(mapper::toDomain);
     }
 }
-

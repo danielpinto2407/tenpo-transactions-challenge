@@ -1,184 +1,559 @@
 # Tenpo Transactions Challenge
 
-Repositorio con la solución al challenge FullStack-Externo: backend en Java (Spring Boot) y frontend en React (Vite).
+Aplicación FullStack para la gestión de transacciones de Tenpistas, desarrollada con Spring Boot (backend) y React + TypeScript (frontend), siguiendo principios SOLID y arquitectura hexagonal.
 
-Este README describe la arquitectura, tecnologías, pasos para ejecutar la aplicación (local y con Docker), cómo ejecutar las pruebas y verificaciones útiles para quien revisará la prueba.
-
-**Tecnologías principales**
-- Backend: Java 21, Spring Boot 3.x, Spring Data JPA, Hibernate
-- Base de datos: PostgreSQL (contenedor Docker)
-- API docs: Springdoc OpenAPI (Swagger)
-- Frontend: React + TypeScript + Vite
-- Styling: Tailwind CSS
-- Tests frontend: Vitest + Testing Library
-- Tests backend: JUnit (Maven)
-
----
-
-## Requisitos previos
-- Docker & Docker Compose (recomendado para evaluación)
-- JDK 21 + Maven (solo si quieres ejecutar backend fuera de Docker)
-- Node.js + npm (solo si quieres ejecutar frontend fuera de Docker)
+## 📋 Tabla de Contenidos
+- [Arquitectura](#-arquitectura)
+- [Tecnologías](#-tecnologías)
+- [Requisitos Previos](#-requisitos-previos)
+- [Inicio Rápido](#-inicio-rápido-docker-compose)
+- [Ejecución Local](#-ejecución-local-sin-docker)
+- [Testing](#-testing)
+- [API Documentation](#-api-documentation)
+- [Decisiones de Diseño](#-decisiones-de-diseño)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
 
 ---
 
-## Quickstart (recomendado) — ejecutar todo con Docker Compose
+## 🏗 Arquitectura
 
-Desde la raíz del repositorio ejecuta:
+### Backend (Spring Boot)
+El backend implementa una **arquitectura en capas** inspirada en principios hexagonales:
 
-Windows (cmd.exe):
+```
+┌─────────────────────────────────────┐
+│         API Layer (Controllers)      │
+│  - REST endpoints                    │
+│  - Validación de entrada             │
+│  - Manejo de respuestas HTTP         │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Service Layer (Business Logic)  │
+│  - Lógica de negocio                │
+│  - Validaciones de dominio          │
+│  - Orquestación de operaciones      │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│    Repository Layer (Data Access)    │
+│  - Spring Data JPA                   │
+│  - Abstracción de persistencia      │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         PostgreSQL Database          │
+└──────────────────────────────────────┘
+```
+
+**Componentes principales:**
+- **Controllers**: Manejo de requests HTTP y validación de entrada
+- **Services**: Lógica de negocio y reglas de dominio
+- **Repositories**: Acceso a datos mediante Spring Data JPA
+- **DTOs**: Separación entre representación API y entidades de dominio
+- **Global Exception Handler**: Manejo centralizado de errores con respuestas consistentes
+
+### Frontend (React + TypeScript)
+Arquitectura basada en **componentes funcionales** con hooks:
+
+```
+┌─────────────────────────────────────┐
+│           Pages/Views                │
+│  - TransactionsPage                  │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│      Feature Components              │
+│  - TransactionList                   │
+│  - TransactionForm                   │
+│  - Filtros y búsqueda               │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│       Shared Components              │
+│  - Buttons, Cards, Modals           │
+│  - Loading states                    │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│        Services/API Layer            │
+│  - Axios client                      │
+│  - API calls                         │
+└──────────────────────────────────────┘
+```
+
+---
+
+## 🛠 Tecnologías
+
+### Backend
+- **Java 21** - LTS release con mejoras de rendimiento y features modernos
+- **Spring Boot 3.4** - Framework principal
+- **Spring Data JPA** (Hibernate) - ORM y gestión de persistencia
+- **Spring Validation** - Validación declarativa de DTOs
+- **PostgreSQL 16** - Base de datos relacional
+- **Flyway** - Migraciones de base de datos versionadas
+- **JUnit 5** + **Mockito** - Testing unitario e integración
+- **Lombok** - Reducción de boilerplate
+- **Maven** - Gestión de dependencias y build
+
+### Frontend
+- **React 18** - Biblioteca UI con Hooks
+- **TypeScript** - Type safety y mejor experiencia de desarrollo
+- **Vite** - Build tool rápido y moderno
+- **Tailwind CSS** - Utility-first CSS framework
+- **Axios** - Cliente HTTP con interceptors
+- **React Hook Form** - Gestión eficiente de formularios
+- **Vitest** + **Testing Library** - Testing moderno para React
+
+### DevOps
+- **Docker** - Containerización
+- **Docker Compose** - Orquestación multi-contenedor
+- **Nginx** - Servidor web para frontend en producción
+
+---
+
+## 📦 Requisitos Previos
+
+- **Docker** >= 20.10
+- **Docker Compose** >= 2.0
+- (Opcional) **JDK 21** + **Maven 3.8+** para desarrollo local del backend
+- (Opcional) **Node.js 18+** + **npm** para desarrollo local del frontend
+
+---
+
+## 🚀 Inicio Rápido (Docker Compose)
+
+### 1. Clonar el repositorio
+```bash
+git clone <repository-url>
+cd tenpo-challenge
+```
+
+### 2. Levantar todos los servicios
+
+**Windows (cmd/PowerShell):**
 ```cmd
 docker compose up --build
 ```
 
-PowerShell note: si copias comandos con `&` o caracteres especiales usa comillas.
-
-Linux / macOS:
+**Linux/macOS:**
 ```bash
 docker compose up --build
 ```
 
-Esto iniciará los siguientes servicios:
-- `db` (Postgres) — credenciales por defecto en `docker-compose.yml`.
-- `backend` (Spring Boot) — expuesto en `http://localhost:8080`.
-- `frontend` (builder + nginx) — expuesto en `http://localhost:3000`.
+### 3. Acceder a la aplicación
 
-Parar y remover contenedores:
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| Frontend | http://localhost:3000 | Interfaz de usuario |
+| Backend API | http://localhost:8080 | REST API |
+| Swagger UI | http://localhost:8080/swagger-ui.html | Documentación interactiva |
+| PostgreSQL | localhost:5432 | Base de datos (usuario: `tenpo`, password: `tenpo123`) |
+
+### 4. Detener los servicios
 ```bash
+# Detener contenedores
 docker compose down
+
+# Detener y eliminar volúmenes (limpieza completa)
+docker compose down -v
 ```
 
-Notas:
-- El servicio `frontend` en `docker-compose.yml` usa una `VITE_API_BASE_URL` apuntando a `http://backend:8080` para que la build estática sepa la URL interna del backend en el entorno Docker.
+> **⚠️ Nota:** Si cambias la versión de PostgreSQL en `docker-compose.yml`, ejecuta `docker compose down -v` antes de volver a levantar los servicios para evitar incompatibilidades en el volumen de datos.
 
 ---
 
-## Ejecutar localmente (sin Docker)
+## 💻 Ejecución Local (sin Docker)
 
-Estas instrucciones sirven si prefieres ejecutar servicios por separado.
+### Backend
 
-Backend (JDK 21 + Maven):
+1. **Iniciar PostgreSQL** (puedes usar el contenedor standalone):
+```bash
+docker run -d \
+  --name postgres-tenpo \
+  -e POSTGRES_DB=tenpo \
+  -e POSTGRES_USER=tenpo \
+  -e POSTGRES_PASSWORD=tenpo123 \
+  -p 5432:5432 \
+  postgres:16-alpine
+```
+
+2. **Configurar application.properties** (si es necesario):
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/tenpo
+spring.datasource.username=tenpo
+spring.datasource.password=tenpo123
+```
+
+3. **Ejecutar el backend**:
 ```bash
 cd backend
+./mvnw clean install
 ./mvnw spring-boot:run
 ```
 
-Frontend (Node.js + npm):
-```bash
-cd frontend
-npm install
-# para desarrollo
-npm run dev
-# para construir producción localmente
-npm run build
-```
+El backend estará disponible en `http://localhost:8080`
 
-Si ejecutas el frontend en modo `dev`, setea `VITE_API_BASE_URL` en `frontend/.env`:
-```
+### Frontend
+
+1. **Configurar variables de entorno**. Crea `frontend/.env`:
+```env
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
----
-
-## Tests
-
-Backend (Maven / JUnit):
-```bash
-cd backend
-./mvnw test
-```
-
-Frontend (Vitest):
+2. **Instalar dependencias y ejecutar**:
 ```bash
 cd frontend
 npm install
-npx vitest run
-# para cobertura
-npx vitest run --coverage
+npm run dev
 ```
 
-Se añadieron pruebas unitarias a `frontend/src/components/__tests__` y se configuró `src/setupTests.ts`.
+El frontend estará disponible en `http://localhost:5173` (puerto por defecto de Vite)
 
 ---
 
-## Endpoints principales
+## 🧪 Testing
 
-- POST /transactions
-  - Crea una transacción.
-  - Request example:
+### Backend (JUnit 5)
 
+```bash
+cd backend
+
+# Ejecutar todos los tests
+./mvnw test
+
+# Ejecutar tests con cobertura
+./mvnw verify
+
+# Ejecutar solo tests unitarios
+./mvnw test -Dtest=*UnitTest
+
+# Ejecutar solo tests de integración
+./mvnw test -Dtest=*IntegrationTest
+```
+
+**Tipos de tests implementados:**
+- ✅ Tests unitarios de servicios
+- ✅ Tests de validación de DTOs
+- ✅ Tests de repositorio con `@DataJpaTest`
+- ✅ Tests de integración de controllers con `@SpringBootTest`
+
+### Frontend (Vitest)
+
+```bash
+cd frontend
+
+# Ejecutar todos los tests
+npm test
+
+# Modo watch (desarrollo)
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Tests específicos
+npx vitest run TransactionForm.test.tsx
+```
+
+**Tipos de tests implementados:**
+- ✅ Tests de componentes con Testing Library
+- ✅ Tests de hooks personalizados
+- ✅ Tests de utilidades y helpers
+- ✅ Tests de integración de formularios
+
+---
+
+## 📚 API Documentation
+
+### Swagger/OpenAPI
+
+La documentación interactiva está disponible en:
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+
+### Endpoints Principales
+
+#### `POST /transactions`
+Crea una nueva transacción.
+
+**Request Body:**
 ```json
 {
   "amount": 12000,
   "business": "Supermercado ABC",
-  "tenpistaName": "Juan Perez",
+  "tenpistaName": "Juan Pérez",
   "transactionDate": "2024-12-01T14:30:00"
 }
 ```
 
-  - Respuesta: `201 Created` con header `Location: /transactions/{id}` y el body JSON de la transacción creada.
+**Validaciones:**
+- `amount`: Debe ser positivo (> 0)
+- `business`: No puede estar vacío, máximo 255 caracteres
+- `tenpistaName`: No puede estar vacío, máximo 100 caracteres
+- `transactionDate`: No puede ser fecha futura
 
-- GET /transactions
-  - Devuelve todas las transacciones (ordenadas por creación, más recientes primero).
-
-- GET /transactions?page={page}&size={size}
-  - Devuelve una respuesta paginada con la estructura:
-
+**Response:** `201 Created`
 ```json
 {
-  "content": [ /* array de transacciones */ ],
-  "page": 0,
-  "size": 5,
-  "totalElements": 42,
-  "totalPages": 9
+  "id": 1,
+  "amount": 12000,
+  "business": "Supermercado ABC",
+  "tenpistaName": "Juan Pérez",
+  "transactionDate": "2024-12-01T14:30:00",
+  "createdAt": "2024-12-08T10:00:00Z",
+  "updatedAt": "2024-12-08T10:00:00Z"
 }
 ```
 
----
+**Headers:**
+- `Location: /transactions/1`
 
-## Ordenación de transacciones (nota importante)
+#### `GET /transactions`
+Lista todas las transacciones (sin paginación).
 
-Por diseño, las transacciones ahora se devuelven ordenadas por el orden de creación (más recientes primero). Esto se implementó ordenando por la columna `id` en la base de datos (`ORDER BY id DESC`) tanto en la consulta paginada como en el listado completo.
-
-Motivo: la entidad actual no tenía un campo `createdAt`; usar `id` (auto-incremental) es una forma segura de representar el orden de creación sin cambios de esquema. Si prefieres un campo explícito `createdAt`, puedo añadirlo con `@PrePersist` y una migración SQL, y luego ordenar por `createdAt`.
-
----
-
-## Verificar manualmente (ejemplos)
-
-Obtener página 0, size 5 (PowerShell):
-```powershell
-Invoke-RestMethod -Uri 'http://localhost:8080/transactions?page=0&size=5' -Headers @{Accept='application/json'} | ConvertTo-Json -Depth 5
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "amount": 12000,
+    "business": "Supermercado ABC",
+    "tenpistaName": "Juan Pérez",
+    "transactionDate": "2024-12-01T14:30:00",
+    "createdAt": "2024-12-08T10:00:00Z",
+    "updatedAt": "2024-12-08T10:00:00Z"
+  }
+]
 ```
 
-Obtener todos (curl on Linux/macOS):
+**Ordenación:** Por defecto ordena por `createdAt` DESC (más recientes primero)
+
+#### `GET /transactions?page={page}&size={size}`
+Lista transacciones con paginación.
+
+**Parámetros de query:**
+- `page`: Número de página (default: 0)
+- `size`: Tamaño de página (default: 10)
+
+**Response:** `200 OK`
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "amount": 12000,
+      "business": "Supermercado ABC",
+      "tenpistaName": "Juan Pérez",
+      "transactionDate": "2024-12-01T14:30:00",
+      "createdAt": "2024-12-08T10:00:00Z",
+      "updatedAt": "2024-12-08T10:00:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 42,
+  "totalPages": 5
+}
+```
+
+### Manejo de Errores
+
+Todos los errores devuelven una estructura consistente:
+
+```json
+{
+  "timestamp": "2024-12-08T10:00:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "El monto debe ser positivo",
+  "path": "/transactions"
+}
+```
+
+**Códigos de error comunes:**
+- `400 Bad Request`: Validación fallida
+- `404 Not Found`: Recurso no encontrado
+- `500 Internal Server Error`: Error del servidor
+
+---
+
+## 🎯 Decisiones de Diseño
+
+### Backend
+
+#### 1. Arquitectura en Capas
+- **Separación de responsabilidades**: Controllers, Services, Repositories
+- **DTOs**: Desacoplamiento entre API y dominio
+- **Validación en múltiples capas**: Frontend → Controller (@Valid) → Service (lógica de negocio)
+
+#### 2. Auditoría Automática
+- **JPA Auditing**: `@CreatedDate` y `@LastModifiedDate` para tracking automático
+- **Timestamps en UTC**: `timestamptz` para evitar problemas de zonas horarias
+- **Campos inmutables**: `createdAt` solo se setea en creación
+
+#### 3. Migraciones con Flyway
+- **Versionado**: Migraciones numeradas secuencialmente (`V1__`, `V2__`, etc.)
+- **Idempotencia**: Scripts seguros para re-ejecución
+- **Control por ambiente**: Variable `SPRING_FLYWAY_ENABLED` en Docker Compose
+
+#### 4. Manejo de Errores Centralizado
+- **GlobalExceptionHandler**: Un único punto para mapear excepciones a respuestas HTTP
+- **Respuestas consistentes**: Misma estructura para todos los errores
+- **Logging**: Trazabilidad de errores con stack traces en logs
+
+#### 5. Paginación Flexible
+- **Dual approach**: Endpoint sin paginación para simplicidad, con paginación para escalabilidad
+- **Defaults sensatos**: Tamaño de página por defecto de 10
+- **Metadatos completos**: totalElements, totalPages para implementar UI pagination
+
+### Frontend
+
+#### 1. TypeScript
+- **Type safety**: Prevención de errores en tiempo de desarrollo
+- **Interfaces claras**: Contratos explícitos entre componentes y API
+- **Mejor DX**: Autocompletado y documentación inline
+
+#### 2. Validación de Formularios
+- **Doble validación**: Cliente (UX) + Servidor (seguridad)
+- **Feedback inmediato**: Validación en tiempo real con React Hook Form
+- **Mensajes claros**: Errores específicos por campo
+
+#### 3. Gestión de Estado
+- **React Query** (opcional/recomendado): Cache y sincronización con servidor
+- **useState local**: Para estado UI simple
+- **Props drilling mínimo**: Composición de componentes bien definida
+
+#### 4. Estilos con Tailwind
+- **Utility-first**: Desarrollo rápido sin context switching
+- **Responsive por defecto**: Mobile-first approach
+- **Consistencia**: Sistema de diseño coherente
+
+### DevOps
+
+#### 1. Docker Multi-Stage Builds
+- **Backend**: Build de Maven en imagen builder, runtime en JRE slim
+- **Frontend**: Build de Vite, servido con Nginx alpine
+- **Optimización**: Imágenes finales pequeñas (<100MB frontend, ~200MB backend)
+
+#### 2. Docker Compose
+- **Desarrollo local**: Ambiente completo con un comando
+- **Networking**: Red interna para comunicación entre servicios
+- **Volúmenes**: Persistencia de datos de PostgreSQL
+
+#### 3. Variables de Entorno
+- **Configuración externalizada**: Fácil cambio entre ambientes
+- **Secrets seguros**: No hardcodear credenciales
+- **Defaults sensatos**: Valores por defecto para desarrollo local
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+tenpo-challenge/
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/tenpo/challenge/
+│   │   │   │   ├── controller/        # REST Controllers
+│   │   │   │   ├── service/           # Business Logic
+│   │   │   │   ├── repository/        # Data Access
+│   │   │   │   ├── model/             # Domain Entities
+│   │   │   │   ├── dto/               # Data Transfer Objects
+│   │   │   │   ├── exception/         # Custom Exceptions
+│   │   │   │   └── config/            # Spring Configuration
+│   │   │   └── resources/
+│   │   │       ├── db/migration/      # Flyway migrations
+│   │   │       └── application.properties
+│   │   └── test/                      # Unit & Integration Tests
+│   ├── Dockerfile
+│   └── pom.xml
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/                # React Components
+│   │   │   ├── features/              # Feature-specific
+│   │   │   └── shared/                # Reusable
+│   │   ├── services/                  # API calls
+│   │   ├── types/                     # TypeScript types
+│   │   ├── utils/                     # Helper functions
+│   │   └── App.tsx
+│   ├── public/
+│   ├── Dockerfile
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## 🔧 Comandos Útiles
+
+### Docker
+
 ```bash
-curl -sS "http://localhost:8080/transactions" | jq .
+# Rebuild completo
+docker compose build --no-cache
+
+# Ver logs en tiempo real
+docker compose logs -f
+
+# Logs de un servicio específico
+docker compose logs backend -f
+
+# Ejecutar comando en contenedor
+docker compose exec backend bash
+docker compose exec db psql -U tenpo -d tenpo
+
+# Reiniciar un servicio
+docker compose restart backend
+
+# Ver estado de contenedores
+docker compose ps
 ```
 
-Crear una transacción (curl):
+### Base de Datos
+
 ```bash
-curl -sS -X POST "http://localhost:8080/transactions" -H "Content-Type: application/json" -d '{"amount":100,"business":"Tienda","tenpistaName":"Ana","transactionDate":"2025-12-01T10:00:00"}' -i
+# Conectarse a PostgreSQL
+docker compose exec db psql -U tenpo -d tenpo
+
+# Backup
+docker compose exec db pg_dump -U tenpo tenpo > backup.sql
+
+# Restore
+docker compose exec -T db psql -U tenpo -d tenpo < backup.sql
+
+# Ver tablas
+docker compose exec db psql -U tenpo -d tenpo -c "\dt"
 ```
 
 ---
 
-## Buenas prácticas y consideraciones de entrega
+## 📈 Mejoras Futuras
 
-- Para producción se recomienda:
-  - Añadir migraciones gestionadas (Flyway / Liquibase).
-  - Auditar y versionar la API (OpenAPI + versioning).
-  - Añadir tests de integración (Testcontainers) para el flujo completo con Postgres.
-
-- Para la evaluación, incluye en la descripción del PR/entrega:
-  - Resumen de endpoints y reglas de negocio implementadas.
-  - Cómo ejecutar con Docker (comandos que usarías localmente).
-  - Cualquier decisión técnica relevante (por ejemplo: ordenación por `id` vs `createdAt`).
+- [ ] Implementar autenticación y autorización (Spring Security + JWT)
+- [ ] Agregar filtros y búsqueda avanzada de transacciones
+- [ ] Implementar soft delete para transacciones
+- [ ] Agregar métricas con Actuator y Prometheus
+- [ ] Implementar rate limiting
+- [ ] CI/CD pipeline (GitHub Actions, GitLab CI)
+- [ ] Logging estructurado con ELK stack
+- [ ] Internacionalización (i18n) en frontend
+- [ ] Tests E2E con Playwright/Cypress
 
 ---
 
-Si quieres que:
-- haga el cambio para introducir `createdAt` en la entidad y la migración SQL,
-- o que cree un pequeño `backend/README.md` con detalle técnico adicional,
+## 📄 Licencia
 
-dímelo y lo preparo.
+Este proyecto fue desarrollado como parte del Tenpo FullStack Challenge.
+
+---
+
+## 👥 Contacto
+
+Si tienes preguntas sobre la implementación, no dudes en abrir un issue en el repositorio o contactarme a wdpinto@utp.edu.co.

@@ -37,7 +37,9 @@ class TransactionMapperTest {
                 100, 
                 "Test Business",
                 "John Doe",
-                date
+            date,
+            null,
+            null
         );
     }
 
